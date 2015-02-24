@@ -5,7 +5,7 @@ Douban FM Class For PHP
 		Version: 1.0
 		License: GPL V2
 
-Function Reference:
+		Function Reference:
 		get_channels() 							获得固定的可用频道信息
 		login($email, $password) 					豆瓣FM登录函数
 		like($channel, $sid, $info) 					给指定歌曲加红心函数
