@@ -5,7 +5,6 @@
 	 * @version 1.0
 	 * @author Bruce Zhang <zy183525594@163.com>
 	 * @copyright All Copyrights Reserved.
-	 * @license http://www.phpzon.com phpzon
 	 * @static $ch
 	 * @todo never_play end next ...
 	 */
