@@ -20,10 +20,10 @@ Douban FM Class For PHP
 			get_list	
 				获得某频道歌曲列表
 
-===========================
+----------------------------
 ####Documentation
 
----------------------------
+===========================
 		Function Reference:
 			get_channels
 				parameters: none
