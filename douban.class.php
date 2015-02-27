@@ -6,7 +6,6 @@
 	 * @author Bruce Zhang <zy183525594@163.com>
 	 * @copyright All Copyrights Reserved.
 	 * @static $ch
-	 * @todo never_play end next ...
 	 */
 	class Douban {
 		static $ch;
@@ -18,6 +17,8 @@
 		public function __construct(){
 			//curl对象的初始化
 			self::$ch = curl_init();
+			//屏蔽SSL验证
+			curl_setopt(self::$ch, CURLOPT_SSL_VERIFYPEER, false); 
 			//设置curl_exec函数返回数据而非自动输出
 			curl_setopt(self::$ch, CURLOPT_RETURNTRANSFER, true);
 			//模拟浏览器访问，可随意修改为喜欢的浏览器UserAgent
@@ -121,9 +122,12 @@
 		 * @return array          	返回歌曲列表或出错信息
 		 * @access public
 		 */
-		public function dislike($channel, $sid, $info) {
+		public function dislike($channel, $sid, $info=false) {
 			//注释信息与like函数一致
-			$logged = '&user_id='.$info['id'].'&expire='.$info['expire'].'&token='.$info['token'];
+			$logged = "";
+			if($info) {
+				$logged = '&user_id='.$info['id'].'&expire='.$info['expire'].'&token='.$info['token'];
+			}
 			$url = "http://www.douban.com/j/app/radio/people?app_name=radio_desktop_win&version=100{$logged}&channel={$channel}&sid={$sid}&type=u";
 			curl_setopt(self::$ch, CURLOPT_URL, $url);
 			curl_setopt(self::$ch, CURLOPT_POST, false);
@@ -139,13 +143,61 @@
 			return $content;
 		}
 
+		//    $options=array('q'=>'', 'tag'=>''...);
+		//    q  tag   start  count
 		/**
-		 * 获取专辑信息函数
+		 * 搜索专辑/歌曲
+		 * @param  array $options  参数数组
+		 * @return array           返回搜索结果数组
+		 */
+		public function search($options) {
+			$url = "https://api.douban.com/v2/music/search?";
+			foreach ($options as $key => $value) {
+				$url .= "{$key}={$value}&";
+			}
+			$url = rtrim($url, '&');
+			curl_setopt(self::$ch, CURLOPT_URL, $url);
+			curl_setopt(self::$ch, CURLOPT_POST, false);
+			$response = curl_exec(self::$ch);
+			$array = json_decode($response, true);
+			return $array;
+		}
+
+		/**
+		 * 获得歌曲最多的20个标签
+		 * @param  string $song subject id
+		 * @return array        返回最多的标签
+		 */
+		public function get_tags($song) {
+			$url = "https://api.douban.com/v2/music/{$song}/tags";
+			curl_setopt(self::$ch, CURLOPT_URL, $url);
+			curl_setopt(self::$ch, CURLOPT_POST, false);
+			$response = curl_exec(self::$ch);
+			$array = json_decode($response, true);
+			return $array;
+		}
+
+		/**
+		 * 获取专辑信息函数 -- V2接口
 		 * @param  mixed $aid 专辑号aid，get_list函数取得
 		 * @return mixed      返回专辑信息，失败返回false
 		 * @access public
 		 */
-		public function get_album_info($aid) {
+		public function get_subject_info($song) {
+			curl_setopt(self::$ch, CURLOPT_URL, "https://api.douban.com/v2/music/{$song}");
+			curl_setopt(self::$ch, CURLOPT_POST, false);
+			$response = curl_exec(self::$ch);
+			$array = json_decode($response, true);
+			return $array;
+		}
+
+		/**
+		 * 获取专辑信息函数 -- 旧接口
+		 * @param  mixed $aid 专辑号aid，get_list函数取得
+		 * @return mixed      返回专辑信息，失败返回false
+		 * @access public
+		 */
+		public function get_subject_info_old($aid) {
 			//设置API获取地址，GET请求
 			curl_setopt(self::$ch, CURLOPT_URL, "http://api.douban.com/music/subject/{$aid}");
 			curl_setopt(self::$ch, CURLOPT_POST, false);
@@ -160,24 +212,84 @@
 		}
 
 		/**
-		 * @todo [description]
+		 * 跳过当前歌曲
+		 * @param  integer  $channel 频道号
+		 * @param  string  	$sid     歌曲sid
+		 * @param  array 	$info    登录信息
+		 * @return array           
 		 */
-		private function next($sid, $info=false) {
-
+		public function next($channel, $sid, $info=false) {
+			$logged = "";
+			if($info) {
+				$logged = '&user_id='.$info['id'].'&expire='.$info['expire'].'&token='.$info['token'];
+			}
+			$url = "http://www.douban.com/j/app/radio/people?app_name=radio_desktop_win&version=100{$logged}&channel={$channel}&sid={$sid}&type=s";
+			curl_setopt(self::$ch, CURLOPT_URL, $url);
+			curl_setopt(self::$ch, CURLOPT_POST, false);
+			$response = curl_exec(self::$ch);
+			$list = json_decode($response, true);
+			if($list['r']) {
+				$content['success'] = false;
+				$content['msg'] = $list['err'];
+			}else {
+				$content['success'] = true;
+				$content['songs'] = $list['song'];
+			}
+			return $content;
 		}
 
 		/**
-		 * @todo [description]
+		 * 歌曲不再播放
+		 * @param  integer  $channel 频道号
+		 * @param  string  	$sid     歌曲sid
+		 * @param  array 	$info    登录信息
+		 * @return array           
 		 */
-		private function never_play($sid, $info=false) {
-
+		public function never_play($channel, $sid, $info=false) {
+			$logged = "";
+			if($info) {
+				$logged = '&user_id='.$info['id'].'&expire='.$info['expire'].'&token='.$info['token'];
+			}
+			$url = "http://www.douban.com/j/app/radio/people?app_name=radio_desktop_win&version=100{$logged}&channel={$channel}&sid={$sid}&type=b";
+			curl_setopt(self::$ch, CURLOPT_URL, $url);
+			curl_setopt(self::$ch, CURLOPT_POST, false);
+			$response = curl_exec(self::$ch);
+			$list = json_decode($response, true);
+			if($list['r']) {
+				$content['success'] = false;
+				$content['msg'] = $list['err'];
+			}else {
+				$content['success'] = true;
+				$content['songs'] = $list['song'];
+			}
+			return $content;
 		}
 
 		/**
-		 * @todo [description]
+		 * 歌曲播放完毕
+		 * @param  integer  $channel 频道号
+		 * @param  string  	$sid     歌曲sid
+		 * @param  array 	$info    登录信息
+		 * @return array           
 		 */
-		private function end($sid, $info=false) {
-
+		public function end($channel, $sid, $info=false) {
+			$logged = "";
+			if($info) {
+				$logged = '&user_id='.$info['id'].'&expire='.$info['expire'].'&token='.$info['token'];
+			}
+			$url = "http://www.douban.com/j/app/radio/people?app_name=radio_desktop_win&version=100{$logged}&channel={$channel}&sid={$sid}&type=e";
+			curl_setopt(self::$ch, CURLOPT_URL, $url);
+			curl_setopt(self::$ch, CURLOPT_POST, false);
+			$response = curl_exec(self::$ch);
+			$list = json_decode($response, true);
+			if($list['r']) {
+				$content['success'] = false;
+				$content['msg'] = $list['err'];
+			}else {
+				$content['success'] = true;
+				$content['songs'] = $list['song'];
+			}
+			return $content;
 		}
 
 		/**
