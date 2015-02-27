@@ -6,25 +6,26 @@ Douban FM Class For PHP
 		License: GPL V2
 
 =====================================
-		Function Description:
-			get_channels
-				获得固定的可用频道信息
-			login 
-				豆瓣FM登录函数
-			like 
-				给指定歌曲加红心函数
-			dislike 	
-				给指定歌曲取消红心函数
-			get_album_info
-				获取专辑信息函数
-			get_list	
-				获得某频道歌曲列表
+Function Description:
+		get_channels
+			获得固定的可用频道信息
+		login 
+			豆瓣FM登录函数
+		like 
+			给指定歌曲加红心函数
+		dislike 	
+			给指定歌曲取消红心函数
+		get_album_info
+			获取专辑信息函数
+		get_list	
+			获得某频道歌曲列表
 
 ----------------------------
 ####Documentation
 
 ===========================
 Function Reference:
+
 		get_channels
 			parameters: none
 			returns: array or false(if connection failed)
