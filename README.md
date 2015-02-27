@@ -7,6 +7,7 @@ Douban FM Class For PHP
 
 =====================================
 Function Description:
+
 		get_channels
 			获得固定的可用频道信息
 		login 
